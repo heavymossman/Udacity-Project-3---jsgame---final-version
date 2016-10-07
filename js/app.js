@@ -1,0 +1,235 @@
+// Generate variables
+var BLOCK_SIZE_X = 101,
+    BLOCK_SIZE_Y = 83,
+    totalScore = 0,
+    totalGem = 0,
+    characterSelect = 0;
+
+// Variable for setting the starter point of the player.
+var playerStartX = 2 * BLOCK_SIZE_X,
+    playerStartY = 5 * BLOCK_SIZE_Y - 20;
+
+// Function for generate random position of the gem.
+var gemPosition = function() {
+    this.x = Math.floor(Math.random() * 4) * BLOCK_SIZE_X;
+    this.y = (Math.floor(Math.random() * 3) * BLOCK_SIZE_Y) + 55;
+};
+
+// Chooser object is for generate the character selector.
+var Chooser = function() {
+    this.sprite = 'images/Selector.png';
+    this.x = 0;
+    this.y = 220;
+};
+
+// For Rendering the selector image.
+Chooser.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+// For Handle the keyboard input for character selector.
+Chooser.prototype.handleInput = function(key) {
+    switch (key) {
+        case 'left':
+            if (this.x < BLOCK_SIZE_X) {
+                this.x = this.x;
+            } else {
+                this.x = this.x - BLOCK_SIZE_X;
+            }
+            break;
+        case 'right':
+            if (this.x > BLOCK_SIZE_X * 3) {
+                this.x = this.x;
+            } else {
+                this.x = this.x + BLOCK_SIZE_X;
+            }
+            break;
+        case 'enter':
+            characterSelect = Math.floor(this.x / BLOCK_SIZE_X) + 1;
+            break;
+    }
+};
+
+// Enemies our player must avoid
+var Enemy = function() {
+    // Variables applied to each of our instances go here,
+    // we've provided one for you to get started
+
+    // The image/sprite for our enemies, this uses
+    // a helper we've provided to easily load images
+    this.sprite = 'images/enemy-bug.png';
+    this.x = 0 - BLOCK_SIZE_X;
+    this.y = 55 + Math.floor(Math.random() * 3) * BLOCK_SIZE_Y;
+    this.speed = Math.floor(Math.random() * 500) + 100;
+};
+
+// Update the enemy's position, required method for game
+// Parameter: dt, a time delta between ticks
+Enemy.prototype.update = function(dt) {
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+    this.x = this.x + this.speed * dt;
+    if (this.x > BLOCK_SIZE_X * 5) {
+        this.x = 0 - BLOCK_SIZE_X;
+        this.y = 55 + Math.floor(Math.random() * 3) * BLOCK_SIZE_Y;
+        this.speed = Math.floor(Math.random() * 500) + 100;
+    }
+};
+
+// Draw the enemy on the screen, required method for game
+Enemy.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+// Now write your own player class
+// This class requires an update(), render() and
+// a handleInput() method.
+var Player = function() {
+    this.sprite = '';
+    this.x = playerStartX;
+    this.y = playerStartY;
+};
+
+// For update the look of character.
+Player.prototype.update = function() {
+    switch (characterSelect) {
+        case 1:
+            this.sprite = 'images/char-boy.png';
+            break;
+        /*case 2:
+            this.sprite = 'images/char-cat-girl.png';
+	   break;
+        case 3:
+            this.sprite = 'images/char-horn-girl.png';
+            break;
+        case 4:
+            this.sprite = 'images/char-pink-girl.png';
+	   break;*/
+        case 2:
+            this.sprite = 'images/char-princess-girl.png';
+	   break;
+        default:
+            this.sprite = 'images/char-boy.png';
+            break;
+    }
+    if (this.y < BLOCK_SIZE_Y-20) {
+        this.x = playerStartX;
+        this.y = playerStartY;
+        totalScore += 3;
+    } else if (collisionDetect(player, allEnemies)) {
+        this.x = playerStartX;
+        this.y = playerStartY;
+        totalScore -= 1;
+    } else if (collisionDetect(player, gem)) {
+        totalGem += 1;
+        gemPosition.apply(gem);
+    }
+};
+
+// For rendering the character.
+Player.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+// For Handle the keyboard input for character movement.
+Player.prototype.handleInput = function(key) {
+    switch (key) {
+        case 'left':
+            if (this.x < BLOCK_SIZE_X) {
+                this.x = this.x;
+            } else {
+                this.x = this.x - BLOCK_SIZE_X;
+            }
+            break;
+        case 'up':
+            if (this.y < BLOCK_SIZE_Y - 20) {
+                this.y = this.y;
+            } else {
+                this.y = this.y - BLOCK_SIZE_Y;
+            }
+            break;
+        case 'right':
+            if (this.x > BLOCK_SIZE_X * 3) {
+                this.x = this.x;
+            } else {
+                this.x = this.x + BLOCK_SIZE_X;
+            }
+            break;
+        case 'down':
+            if (this.y > BLOCK_SIZE_Y * 4) {
+                this.y = this. y;
+            } else {
+                this.y = this.y + BLOCK_SIZE_Y;
+            }
+            break;
+    }
+};
+
+// Constructor for generate gem.
+var Gem = function() {
+    this.sprite = 'images/Heart.png';
+    gemPosition.apply(this);
+};
+
+// For render the gem.
+Gem.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+// Now instantiate your objects.
+// Place all enemy objects in an array called allEnemies
+// Place the player object in a variable called player
+var allEnemies = [];
+var player = new Player();
+var chooser = new Chooser();
+var gem = new Gem();
+
+// For generate new enemy every 3 seconds then stop.
+function generateEnemy(){
+    var enemy = new Enemy();
+    allEnemies.push(enemy);
+    if (allEnemies.length > 2) {
+        clearInterval(randomEnemy);
+    }
+}
+
+generateEnemy();
+var randomEnemy = setInterval(generateEnemy, 3000);
+
+// For detecting the collision.
+function collisionDetect(elementA, elementB) {
+    var playerX = Math.floor(elementA.x / BLOCK_SIZE_X);
+    var playerY = Math.floor(elementA.y / BLOCK_SIZE_Y);
+    if (Array.isArray(elementB)) {
+        for (var i = 0; i < elementB.length; i += 1) {
+            var enemyX = Math.floor(elementB[i].x / BLOCK_SIZE_X);
+            var enemyY = Math.floor((elementB[i].y) / BLOCK_SIZE_Y);
+            if (enemyX === playerX && enemyY === playerY) {
+                return true;
+            }
+        }
+    } else {
+        var enemyX = Math.floor(elementB.x / BLOCK_SIZE_X);
+        var enemyY = Math.floor((elementB.y) / BLOCK_SIZE_Y);
+        if (enemyX === playerX && enemyY === playerY) {
+            return true;
+        }
+    }
+
+}
+
+// This listens for key presses and sends the keys to your
+// Player.handleInput() method. You don't need to modify this.
+document.addEventListener('keyup', function(e) {
+    var allowedKeys = {
+        13: 'enter',
+        37: 'left',
+        38: 'up',
+        39: 'right',
+        40: 'down'
+    };
+
+    player.handleInput(allowedKeys[e.keyCode]);
+    chooser.handleInput(allowedKeys[e.keyCode]);
+});
